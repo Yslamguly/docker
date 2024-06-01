@@ -1,0 +1,61 @@
+#services:
+#  pirgulyyev-database:
+#    image: buildo/h2database:latest
+#    container_name: pirgulyyev-database
+#    restart: on-failure
+#    hostname: h2
+#    volumes:
+#      - ./db/data.sql:/data
+#  pirgulyyev-jdbc:
+#    image: demo
+#    container_name: pirgulyyev-jdbc
+#    restart: on-failure
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile
+#
+#    environment:
+#      DATASOURCE_URL: jdbc:h2:~/h2
+#      DATASOURCE_USERNAME: sa
+#      DATASOURCE_PASSWORD:
+#
+#    depends_on:
+#      - pirgulyyev-database
+#
+#
+#
+##        pirgulyyev-database:
+##          image: oscarfonts/h2:latest
+##          container_name: pirgulyyev-database
+##          restart: on-failure
+##          hostname: h2
+##          volumes:
+##            - ./db/data.sql:/docker-entrypoint-initdb.d/data.sql
+#
+
+services:
+  h2db:
+    image: oscarfonts/h2
+    ports:
+      - "9092:9092"
+      - "8082:8082"
+    environment:
+      H2_OPTIONS: '-ifNotExists'
+    volumes:
+      - h2-data:/opt/h2-data
+      - /src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  my-java-app:
+    image: demo
+    build:
+        context: ./
+        dockerfile: Dockerfile
+    depends_on:
+      - h2db
+    environment:
+      DB_URL: jdbc:h2:tcp://h2db:9092/~/test
+      DB_USER: sa
+      DB_PASSWORD: ''
+
+volumes:
+  h2-data:
